@@ -1,0 +1,4 @@
+build/
+.cache/
+mytest/
+testing/out.txt
