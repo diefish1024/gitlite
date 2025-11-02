@@ -335,3 +335,33 @@ bool Utils::createDirectories(const std::string& path) {
     
     return mkdir(path.c_str(), 0755) == 0 || isDirectory(path);
 }
+
+std::vector<std::string> Utils::listObjectFiles(const std::string& objectsDir) {
+    std::vector<std::string> objectPaths;
+    if (!exists(objectsDir) || !isDirectory(objectsDir)) {
+        return objectPaths;
+    }
+
+    DIR* dir = opendir(objectsDir.c_str());
+    if (dir == nullptr) {
+        return objectPaths;
+    }
+
+    struct dirent* entry;
+    while ((entry = readdir(dir)) != nullptr) {
+        std::string subdir_name = entry->d_name;
+        if (subdir_name == "." || subdir_name == "..") {
+            continue;
+        }
+
+        std::string subdir_path = join(objectsDir, subdir_name);
+        if (isDirectory(subdir_path)) {
+            std::vector<std::string> files_in_subdir = plainFilenamesIn(subdir_path);
+            for (const auto& file_name : files_in_subdir) {
+                objectPaths.push_back(join(subdir_path, file_name));
+            }
+        }
+    }
+    closedir(dir);
+    return objectPaths;
+}

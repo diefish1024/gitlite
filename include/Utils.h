@@ -59,6 +59,7 @@ public:
     static std::vector<std::string> plainFilenamesIn(const std::string& dirPath);
     static std::string join(const std::string& first, const std::string& second);
     static std::string join(const std::string& first, const std::string& second, const std::string& third);
+    static std::vector<std::string> listObjectFiles(const std::string& objectsDir);
 
     // Serialization (simplified for basic types)
     static std::vector<unsigned char> serialize(const std::string& obj);
