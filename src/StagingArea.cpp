@@ -25,8 +25,12 @@ std::map<std::string, std::string> StagingArea::getStagedFiles() const {
     return staged_files_;
 }
 
+std::set<std::string> StagingArea::getRemovedFiles() const {
+    return removed_files_;
+}
+
 bool StagingArea::isEmpty() const {
-    return staged_files_.empty();
+    return staged_files_.empty() && removed_files_.empty();
 }
 
 void StagingArea::clear() {

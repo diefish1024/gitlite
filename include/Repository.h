@@ -31,7 +31,6 @@ public:
         loadHead();
         loadStagingArea();
         loadCommits();
-
     }
 
     static const std::string& getGitliteDir();

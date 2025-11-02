@@ -34,7 +34,6 @@ void Repository::loadCommits() {
         if (object_type == "commit") {
             // TODO: 异常处理
             Commit c = Commit::load(object_path);
-            // commits_[c.getSHA1()] = c;
             commits_.emplace(c.getSHA1(), c);
         }
     }
@@ -103,11 +102,24 @@ void Repository::commit(const std::string& message) {
         Utils::exitWithMessage("Please enter a commit message.");
     }
 
-    if (staging_area_.getStagedFiles().empty()) {
+    if (staging_area_.isEmpty()) {
         Utils::exitWithMessage("No changes added to the commit.");
     }
 
-    Commit new_commit = Commit::create(message, staging_area_.getStagedFiles(), head_);
+    std::map<std::string, std::string> new_commit_files;
+    if (!head_.empty() && commits_.count(head_)) {
+        new_commit_files = commits_.at(head_).getTrackedFiles();
+    }
+    const auto& staged = staging_area_.getStagedFiles();
+    for (const auto& pair : staged) {
+        new_commit_files[pair.first] = pair.second;
+    }
+    const auto& removed = staging_area_.getRemovedFiles();
+    for (const auto& filepath : removed) {
+        new_commit_files.erase(filepath);
+    }
+
+    Commit new_commit = Commit::create(message, new_commit_files, head_);
     new_commit.save();
 
     head_ = new_commit.getSHA1();
@@ -177,6 +189,32 @@ void Repository::log() const {
         }
         
         curr_sha = parents[0];
+    }
+}
+
+void Repository::globalLog() const {
+    for (const auto& pair : commits_) {
+        const auto& curr_sha = pair.first;
+        const auto& curr_commit = pair.second;
+
+        if (commits_.count(curr_sha) == 0) {
+            Utils::exitWithMessage("Error: Found a broken commit history link.");
+            break;
+        }
+
+        std::cout << "===" << std::endl;
+        std::cout << "commit " << curr_commit.getSHA1() << std::endl;
+        const auto& parents = curr_commit.getParents();
+        if (parents.size() > 1) {
+            std::cout << "Merge:";
+            for (size_t i = 0; i < parents.size(); ++i) {
+                std::cout << " " << parents[i].substr(0, 7);
+            }
+            std::cout << std::endl;
+        }
+        std::cout << "Date: " << Utils::formatTimestamp(curr_commit.getTimestamp()) << std::endl;
+        std::cout << curr_commit.getMessage() << std::endl;
+        std::cout << std::endl;
     }
 }
 

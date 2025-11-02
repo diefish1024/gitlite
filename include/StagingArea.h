@@ -22,6 +22,8 @@ public:
     void stageForRemoval(const std::string& filepath);
 
     std::map<std::string, std::string> getStagedFiles() const;
+    std::set<std::string> getRemovedFiles() const;
+
     bool isEmpty() const;
     void clear();
 };
