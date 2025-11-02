@@ -279,7 +279,7 @@ def correctFileOutput(name, expected, dir):
 
 def write_file(test, tag, expected, actual):
     contents = "{}: \n{}: \nExpected: {}\nActual: {}\n".format(test, tag, expected, actual)
-    with open("out.txt", 'a') as f:
+    with open("out.txt", 'w') as f:
         f.write(contents)
 
 def correctProgramOutput(expected, actual, last_groups, is_regexp):
