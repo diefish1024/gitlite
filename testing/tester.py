@@ -277,9 +277,18 @@ def correctFileOutput(name, expected, dir):
     stdData = canonicalize(contents(join(src_dir, expected)))
     return userData == stdData
 
+def clear_out_file():
+    try:
+        with open("out.txt", 'w') as f:
+            pass
+    except IOError as e:
+        print(f"error when clearing out.txt: {e}", file=sys.stderr)
+        sys.exit(1)
+
+
 def write_file(test, tag, expected, actual):
     contents = "{}: \n{}: \nExpected: {}\nActual: {}\n".format(test, tag, expected, actual)
-    with open("out.txt", 'w') as f:
+    with open("out.txt", 'a') as f:
         f.write(contents)
 
 def correctProgramOutput(expected, actual, last_groups, is_regexp):
@@ -548,6 +557,8 @@ if __name__ == "__main__":
     subtask_scores = {}
     for subtask_name, test_list in SUBTASKS.items():
         subtask_scores[subtask_name] = {'earned': 0, 'total': 0, 'tests': []}
+    
+    clear_out_file()
 
     for test in files:
         try:
