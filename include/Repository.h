@@ -23,12 +23,13 @@ private:
     std::string cur_branch_;
 
     void loadHead();
+    void loadStagingArea();
     void loadCommits();
 
 public:
     Repository() {
         loadHead();
-        staging_area_.load(INDEX_FILE_PATH);
+        loadStagingArea();
         loadCommits();
 
     }

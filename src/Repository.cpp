@@ -40,6 +40,10 @@ void Repository::loadCommits() {
     }
 }
 
+void Repository::loadStagingArea() {
+    staging_area_.load(INDEX_FILE_PATH);
+}
+
 void Repository::loadHead() {
     head_ = "";
     cur_branch_ = "master";
