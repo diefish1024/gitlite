@@ -73,6 +73,8 @@ public:
     static bool isFile(const std::string& path);
     static bool isDirectory(const std::string& path);
     static bool createDirectories(const std::string& path);
+
+    std::string static formatTimestamp(time_t timestamp);
 };
 
 #endif // UTILS_H

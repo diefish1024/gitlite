@@ -1,6 +1,7 @@
 #include "../include/Utils.h"
 #include <cstdlib>
 #include <iostream>
+#include <string>
 #include <sys/stat.h>
 #include <cstring>
 
@@ -364,4 +365,11 @@ std::vector<std::string> Utils::listObjectFiles(const std::string& objectsDir) {
     }
     closedir(dir);
     return objectPaths;
+}
+
+std::string Utils::formatTimestamp(time_t timestamp) {
+    char buf[100] = {0};
+    struct tm* timeinfo = localtime(&timestamp);
+    strftime(buf, sizeof(buf), "%a %b %d %H:%M:%S %Y %z", timeinfo);
+    return std::string(buf);
 }

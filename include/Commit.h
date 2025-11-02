@@ -25,6 +25,10 @@ private:
         std::string Seralize() const;
 public:
     Commit() = default;
+
+    std::string getMessage() const { return message_; }
+    time_t getTimestamp() const { return timestamp_; }
+    std::vector<std::string> getParents() const { return parent_commits_; }
     
     static Commit create(const std::string& message,
         const std::map<std::string, std::string>& files,

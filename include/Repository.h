@@ -15,18 +15,22 @@ private:
     static const std::string REFS_DIR_PATH;
     static const std::string HEADS_DIR_PATH;
     static const std::string INDEX_FILE_PATH;
+    static const std::string HEAD_FILE_PATH;
 
     StagingArea staging_area_;
     std::map<std::string, Commit> commits_;
     std::string head_;
+    std::string cur_branch_;
 
+    void loadHead();
     void loadCommits();
 
 public:
     Repository() {
+        loadHead();
         staging_area_.load(INDEX_FILE_PATH);
-
         loadCommits();
+
     }
 
     static const std::string& getGitliteDir();

@@ -8,6 +8,7 @@ const std::string Repository::OBJECTS_DIR_PATH = Utils::join(Repository::GITLITE
 const std::string Repository::REFS_DIR_PATH = Utils::join(Repository::GITLITE_DIR_PATH, "refs");
 const std::string Repository::HEADS_DIR_PATH = Utils::join(Repository::REFS_DIR_PATH, "heads");
 const std::string Repository::INDEX_FILE_PATH = Utils::join(Repository::GITLITE_DIR_PATH, "index");
+const std::string Repository::HEAD_FILE_PATH = Utils::join(Repository::GITLITE_DIR_PATH, "HEAD");
 
 const std::string& Repository::getGitliteDir() {
     return GITLITE_DIR_PATH;
@@ -39,20 +40,50 @@ void Repository::loadCommits() {
     }
 }
 
+void Repository::loadHead() {
+    head_ = "";
+    cur_branch_ = "master";
+
+    if (!Utils::exists(HEAD_FILE_PATH)) {
+        return;
+    }
+
+    cur_branch_ = Utils::readContentsAsString(HEAD_FILE_PATH);
+
+    std::string branch_filepath = Utils::join(HEADS_DIR_PATH, cur_branch_);
+    if (Utils::exists(branch_filepath)) {
+        head_ = Utils::readContentsAsString(branch_filepath);
+    }
+}
+
 void Repository::init() {
-    // TODO: 异常抛出
-    if (!Utils::exists(GITLITE_DIR_PATH)) {
-        Utils::createDirectories(GITLITE_DIR_PATH);
+    if (Utils::exists(GITLITE_DIR_PATH)) {
+        Utils::exitWithMessage("A Gitlite version-control system already exists in the current directory.");
     }
-    if (!Utils::exists(OBJECTS_DIR_PATH)) {
-        Utils::createDirectories(OBJECTS_DIR_PATH);
-    }
-    if (!Utils::exists(REFS_DIR_PATH)) {
-        Utils::createDirectories(REFS_DIR_PATH);
-    }
-    if (!Utils::exists(HEADS_DIR_PATH)) {
-        Utils::createDirectories(HEADS_DIR_PATH);
-    }
+
+    Utils::createDirectories(GITLITE_DIR_PATH);
+    Utils::createDirectories(OBJECTS_DIR_PATH);
+    Utils::createDirectories(REFS_DIR_PATH);
+    Utils::createDirectories(HEADS_DIR_PATH);
+
+    Utils::writeContents(HEAD_FILE_PATH, "master");
+
+    std::string message = "initial commit";
+    std::map<std::string, std::string> initial_files;
+    std::string initial_parent = "";
+    time_t epoch_timestamp = 0;
+
+    Commit initial_commit = Commit::create(
+        message, 
+        initial_files, 
+        initial_parent, 
+        epoch_timestamp
+    );
+
+    initial_commit.save();
+
+    std::string master_branch_path = Utils::join(HEADS_DIR_PATH, "master");
+    Utils::writeContents(master_branch_path, initial_commit.getSHA1());
 }
 
 void Repository::add(const std::string& filepath) {
@@ -76,6 +107,9 @@ void Repository::commit(const std::string& message) {
     new_commit.save();
 
     head_ = new_commit.getSHA1();
+
+    std::string branch_filepath = Utils::join(HEADS_DIR_PATH, cur_branch_);
+    Utils::writeContents(branch_filepath, head_);
 
     staging_area_.clear();
     staging_area_.save(INDEX_FILE_PATH);
@@ -110,6 +144,36 @@ void Repository::rm(const std::string& filepath) {
     }
 
     staging_area_.save(INDEX_FILE_PATH);
+}
+
+void Repository::log() const {
+    for (std::string curr_sha = head_; !curr_sha.empty(); ) {
+        if (commits_.count(curr_sha) == 0) {
+            Utils::exitWithMessage("Error: Found a broken commit history link.");
+            break;
+        }
+        const Commit& curr_commit = commits_.at(curr_sha);
+
+        std::cout << "===" << std::endl;
+        std::cout << "commit " << curr_commit.getSHA1() << std::endl;
+        const auto& parents = curr_commit.getParents();
+        if (parents.size() > 1) {
+            std::cout << "Merge:";
+            for (size_t i = 0; i < parents.size(); ++i) {
+                std::cout << " " << parents[i].substr(0, 7);
+            }
+            std::cout << std::endl;
+        }
+        std::cout << "Date: " << Utils::formatTimestamp(curr_commit.getTimestamp()) << std::endl;
+        std::cout << curr_commit.getMessage() << std::endl;
+        std::cout << std::endl;
+
+        if (parents.empty()) {
+            break;
+        }
+        
+        curr_sha = parents[0];
+    }
 }
 
 void Repository::status() const {
