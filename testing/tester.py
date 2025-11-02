@@ -231,7 +231,7 @@ def doExecute(cmnd, dir, timeout, line_num):
         chdir(dir)
         
         # 使用C++可执行文件
-        full_cmnd = "{} {}".format(CPP_EXECUTABLE, cmnd)
+        full_cmnd = '"{}" {}'.format(CPP_EXECUTABLE, cmnd)
             
         if DEBUG:
             print("[line {}]: gitlet {}".format(line_num, cmnd))
