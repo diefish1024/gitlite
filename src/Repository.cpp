@@ -167,7 +167,7 @@ void Repository::rm(const std::string& filepath) {
 
     if (is_tracked) {
         staging_area_.stageForRemoval(filepath);
-        
+
         if (Utils::exists(filepath)) {
             Utils::restrictedDelete(filepath);
         }
@@ -211,11 +211,6 @@ void Repository::globalLog() const {
         const auto& curr_sha = pair.first;
         const auto& curr_commit = pair.second;
 
-        if (commits_.count(curr_sha) == 0) {
-            Utils::exitWithMessage("Error: Found a broken commit history link.");
-            break;
-        }
-
         std::cout << "===" << std::endl;
         std::cout << "commit " << curr_commit.getSHA1() << std::endl;
         const auto& parents = curr_commit.getParents();
@@ -229,6 +224,21 @@ void Repository::globalLog() const {
         std::cout << "Date: " << Utils::formatTimestamp(curr_commit.getTimestamp()) << std::endl;
         std::cout << curr_commit.getMessage() << std::endl;
         std::cout << std::endl;
+    }
+}
+
+void Repository::find(const std::string& message) const {
+    bool is_find = false;
+    for (const auto& pair : commits_) {
+        const auto& curr_commit = pair.second;
+
+        if (curr_commit.getMessage() == message) {
+            std::cout << curr_commit.getSHA1() << std::endl;
+            is_find = true;
+        }
+    }
+    if (!is_find) {
+        Utils::exitWithMessage("Found no commit with that message.");
     }
 }
 
