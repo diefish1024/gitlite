@@ -47,17 +47,17 @@ Blob Blob::load(const std::string& sha1) {
     return Blob(content, sha1);
 }
 
-bool Blob::save() {
+void Blob::save() {
     std::string dir = Utils::join(".gitlite", "objects", sha1_.substr(0, 2));
     std::string filepath = Utils::join(dir, sha1_.substr(2));
 
     if (Utils::exists(filepath)) {
-        return false;
+        return;
     }
 
     Utils::createDirectories(dir);
 
     std::string header = "blob " + std::to_string(content_.length()) + '\0';
     Utils::writeContents(filepath, header + content_);
-    return true;
+    return;
 }

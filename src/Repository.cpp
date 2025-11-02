@@ -1,6 +1,7 @@
 #include "../include/Repository.h"
 
 #include <bits/types/time_t.h>
+#include "../include/Blob.h"
 #include "../include/Utils.h"
 
 const std::string Repository::GITLITE_DIR_PATH = ".gitlite";
@@ -93,7 +94,20 @@ void Repository::add(const std::string& filepath) {
     if (!Utils::exists(filepath) || !Utils::isFile(filepath)) {
         Utils::exitWithMessage("File does not exist.");
     }
-    staging_area_.addFile(filepath);
+
+    std::map<std::string, std::string> files;
+    if (!head_.empty() && commits_.count(head_)) {
+        files = commits_.at(head_).getTrackedFiles();
+    }
+
+    std::string cur_sha1 = Blob::fromFile(filepath).getSHA1();
+
+    bool is_tracked = files.count(filepath) > 0;
+    if (is_tracked && files.at(filepath) == cur_sha1) {
+        staging_area_.unstage(filepath);
+    } else {
+        staging_area_.addFile(filepath);
+    }
     staging_area_.save(INDEX_FILE_PATH);
 }
 

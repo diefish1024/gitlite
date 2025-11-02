@@ -7,9 +7,9 @@
 
 void StagingArea::addFile(const std::string& filepath) {
     Blob blob = Blob::fromFile(filepath);
-    if (blob.save()) {
-        staged_files_[filepath] = blob.getSHA1();
-    }
+    blob.save();
+    staged_files_[filepath] = blob.getSHA1();
+    removed_files_.erase(filepath);
 }
 
 void StagingArea::unstage(const std::string& filepath) {

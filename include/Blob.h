@@ -17,7 +17,7 @@ public:
     static Blob fromFile(const std::string& filepath);
 
     static Blob load(const std::string& sha1);
-    bool save();
+    void save();
 
     std::string getSHA1() const { return sha1_; }
     std::string getContent() const { return content_; }
