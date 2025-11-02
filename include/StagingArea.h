@@ -14,8 +14,8 @@ public:
     void printStagedFiles() const;
     void printRemovedFiles() const;
 
-    void save(std::string filepath) const;
-    void load(std::string filepath);
+    void save(const std::string& filepath) const;
+    void load(const std::string& filepath);
 
     void addFile(const std::string& filepath);
     void unstage(const std::string& filepath);
