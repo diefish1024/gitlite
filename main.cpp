@@ -88,18 +88,18 @@ int main(int argc, char* argv[]) {
         } else {
             Utils::exitWithMessage("Incorrect operands.");
         }
-    // } else if (firstArg == "branch") {
-    //     checkCWD();
-    //     checkArgsNum(args, 2);
-    //     repo.branch(args[1]);
-    // } else if (firstArg == "rm-branch") {
-    //     checkCWD();
-    //     checkArgsNum(args, 2);
-    //     repo.rmBranch(args[1]);
-    // } else if (firstArg == "reset") {
-    //     checkCWD();
-    //     checkArgsNum(args, 2);
-    //     repo.reset(args[1]);
+    } else if (firstArg == "branch") {
+        checkCWD();
+        checkArgsNum(args, 2);
+        repo.branch(args[1]);
+    } else if (firstArg == "rm-branch") {
+        checkCWD();
+        checkArgsNum(args, 2);
+        repo.rmBranch(args[1]);
+    } else if (firstArg == "reset") {
+        checkCWD();
+        checkArgsNum(args, 2);
+        repo.reset(args[1]);
     // } else if (firstArg == "merge") {
     //     checkCWD();
     //     checkArgsNum(args, 2);

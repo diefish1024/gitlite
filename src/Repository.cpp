@@ -48,10 +48,6 @@ void Repository::loadHead() {
     head_ = "";
     cur_branch_ = "master";
 
-    if (!Utils::exists(HEAD_FILE_PATH)) {
-        return;
-    }
-
     cur_branch_ = Utils::readContentsAsString(HEAD_FILE_PATH);
 
     std::string branch_filepath = Utils::join(HEADS_DIR_PATH, cur_branch_);
@@ -290,7 +286,7 @@ void Repository::checkoutBranch(const std::string &branchName) {
     for (const auto& filename : workDirFiles) {
         bool isTrackedCur = currentFiles.count(filename);
         bool isTrackedTar = targetFiles.count(filename);
-        if (isTrackedCur && isTrackedTar) {
+        if (!isTrackedCur && isTrackedTar) {
             Utils::exitWithMessage("There is an untracked file in the way; delete it, or add and commit it first.");
         }
     }
@@ -340,4 +336,78 @@ void Repository::status() const {
     std::cout << std::endl;
     std::cout << "=== Untracked Files ===" << std::endl;
     // TODO
+}
+
+void Repository::branch(const std::string &branchName) {
+    std::string branchFilePath = Utils::join(HEADS_DIR_PATH, branchName);
+    if (Utils::exists(branchFilePath)) {
+        Utils::exitWithMessage("A branch with that name already exists.");
+    }
+    Utils::writeContents(branchFilePath, head_);
+}
+
+void Repository::rmBranch(const std::string &branchName) {
+    if (branchName == cur_branch_) {
+        Utils::exitWithMessage("Cannot remove the current branch.");
+    }
+    std::string branchFilePath = Utils::join(HEADS_DIR_PATH, branchName);
+    if (!Utils::exists(branchFilePath)) {
+        Utils::exitWithMessage("A branch with that name does not exist.");
+    }
+    // using Utils::restrictedDelete will cause an error
+    if (std::remove(branchFilePath.c_str()) != 0) {
+        Utils::exitWithMessage("Failed to remove branch file.");
+    }
+}
+
+void Repository::reset(const std::string &commitSHA) {
+    std::string resSHA = "";
+    if (commitSHA.length() == 40 && commits_.count(commitSHA)) {
+        resSHA = commitSHA;
+    } else {
+        for (const auto& [fullSHA, commit] : commits_) {
+            if (fullSHA.find(commitSHA) == 0) {
+                resSHA = fullSHA;
+                break;
+            }
+        }
+    }
+    if (resSHA.empty()) {
+        Utils::exitWithMessage("No commit with that id exists.");
+    }
+
+    Commit currentCommit = commits_.at(head_); 
+    Commit targetCommit = commits_.at(resSHA);
+    std::map<std::string, std::string> currentFiles = currentCommit.getTrackedFiles();
+    std::map<std::string, std::string> targetFiles = targetCommit.getTrackedFiles();
+
+    std::vector<std::string> workDirFiles = Utils::plainFilenamesIn(".");
+    for (const auto& filename : workDirFiles) {
+        bool isTrackedCur = currentFiles.count(filename);
+        bool isTrackedTar = targetFiles.count(filename);
+        if (!isTrackedCur && isTrackedTar) {
+            Utils::exitWithMessage("There is an untracked file in the way; delete it, or add and commit it first.");
+        }
+    }
+    
+    for (const auto& pair : currentFiles) {
+        const std::string& filename = pair.first;
+        if (targetFiles.find(filename) == targetFiles.end()) {
+            Utils::restrictedDelete(filename);
+        }
+    }
+    for (const auto& pair : targetFiles) {
+        const std::string& filename = pair.first;
+        const std::string& blobSHA = pair.second;
+
+        Blob blob = Blob::load(blobSHA);
+        Utils::writeContents(filename, blob.getContent());
+    }
+
+    head_ = resSHA;
+    std::string headRefPath = Utils::join(HEADS_DIR_PATH, cur_branch_);
+    Utils::writeContents(headRefPath, head_);
+    
+    staging_area_.clear();
+    staging_area_.save(INDEX_FILE_PATH);
 }

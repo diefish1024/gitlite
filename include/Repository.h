@@ -28,9 +28,13 @@ private:
 
 public:
     Repository() {
-        loadHead();
-        loadStagingArea();
-        loadCommits();
+        head_ = "";
+        cur_branch_ = "master";
+        if (Utils::exists(GITLITE_DIR_PATH)) {
+            loadHead();
+            loadStagingArea();
+            loadCommits();
+        }
     }
 
     static const std::string& getGitliteDir();
