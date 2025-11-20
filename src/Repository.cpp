@@ -103,10 +103,9 @@ void Repository::add(const std::string& filepath) {
     std::string cur_sha1 = Blob::fromFile(filepath).getSHA1();
 
     bool is_tracked = files.count(filepath) > 0;
+    staging_area_.addFile(filepath);
     if (is_tracked && files.at(filepath) == cur_sha1) {
         staging_area_.unstage(filepath);
-    } else {
-        staging_area_.addFile(filepath);
     }
     staging_area_.save(INDEX_FILE_PATH);
 }
@@ -242,9 +241,93 @@ void Repository::find(const std::string& message) const {
     }
 }
 
+void Repository::checkoutFile(const std::string &filename) {
+    checkoutFileInCommit(head_, filename);
+}
+
+void Repository::checkoutFileInCommit(const std::string &commitSHA, const std::string &filename) {
+    std::string resSHA = "";
+    if (commitSHA.length() == 40 && commits_.count(commitSHA)) {
+        resSHA = commitSHA;
+    } else {
+        for (const auto& [fullSHA, commit] : commits_) {
+            if (fullSHA.find(commitSHA) == 0) {
+                resSHA = fullSHA;
+                break;
+            }
+        }
+    }
+    if (resSHA.empty()) {
+        Utils::exitWithMessage("No commit with that id exists.");
+    }
+    const Commit& commit = commits_.at(resSHA);
+    const std::map<std::string, std::string>& trackedFiles = commit.getTrackedFiles();
+
+    auto it = trackedFiles.find(filename);
+    if (it == trackedFiles.end()) {
+        Utils::exitWithMessage("File does not exist in that commit.");
+    }
+
+    Blob blob = Blob::load(it->second);
+    Utils::writeContents(filename, blob.getContent());
+}
+
+void Repository::checkoutBranch(const std::string &branchName) {
+    std::string branchFilePath = Utils::join(HEADS_DIR_PATH, branchName);
+    if (!Utils::exists(branchFilePath)) {
+        Utils::exitWithMessage("No such branch exists.");
+    }
+    if (branchName == cur_branch_) {
+        Utils::exitWithMessage("No need to checkout the current branch.");
+    }
+    std::string targetCommitSHA = Utils::readContentsAsString(branchFilePath);
+    Commit currentCommit = commits_.at(head_); 
+    Commit targetCommit = commits_.at(targetCommitSHA);
+    std::map<std::string, std::string> currentFiles = currentCommit.getTrackedFiles();
+    std::map<std::string, std::string> targetFiles = targetCommit.getTrackedFiles();
+
+    std::vector<std::string> workDirFiles = Utils::plainFilenamesIn(".");
+    for (const auto& filename : workDirFiles) {
+        bool isTrackedCur = currentFiles.count(filename);
+        bool isTrackedTar = targetFiles.count(filename);
+        if (isTrackedCur && isTrackedTar) {
+            Utils::exitWithMessage("There is an untracked file in the way; delete it, or add and commit it first.");
+        }
+    }
+    
+    for (const auto& pair : currentFiles) {
+        const std::string& filename = pair.first;
+        if (targetFiles.find(filename) == targetFiles.end()) {
+            Utils::restrictedDelete(filename);
+        }
+    }
+    for (const auto& pair : targetFiles) {
+        const std::string& filename = pair.first;
+        const std::string& blobSHA = pair.second;
+
+        Blob blob = Blob::load(blobSHA);
+        Utils::writeContents(filename, blob.getContent());
+    }
+
+    head_ = targetCommitSHA;
+    cur_branch_ = branchName;
+
+    Utils::writeContents(HEAD_FILE_PATH, cur_branch_);
+    
+    staging_area_.clear();
+    staging_area_.save(INDEX_FILE_PATH);
+}
+
 void Repository::status() const {
     std::cout << "=== Branches ===" << std::endl;
-    std::cout << "*master" << std::endl; // TODO: 当前分支
+    std::vector<std::string> branches = Utils::plainFilenamesIn(HEADS_DIR_PATH);
+    for (const auto& branch : branches) {
+        if (branch == cur_branch_) {
+            std::cout << "*" << branch << std::endl;
+        } else {
+            std::cout << branch << std::endl;
+        }
+    }
     std::cout << std::endl;
     std::cout << "=== Staged Files ===" << std::endl;
     staging_area_.printStagedFiles();
@@ -257,5 +340,4 @@ void Repository::status() const {
     std::cout << std::endl;
     std::cout << "=== Untracked Files ===" << std::endl;
     // TODO
-    std::cout << std::endl;
 }

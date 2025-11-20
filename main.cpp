@@ -55,39 +55,39 @@ int main(int argc, char* argv[]) {
         checkCWD();
         checkArgsNum(args, 2);
         repo.rm(args[1]);
-    // } else if (firstArg == "log") {
-    //     checkCWD();
-    //     checkArgsNum(args, 1);
-    //     repo.log();
-    // } else if (firstArg == "global-log") {
-    //     checkCWD();
-    //     checkArgsNum(args, 1);
-    //     repo.globalLog();
-    // } else if (firstArg == "find") {
-    //     checkCWD();
-    //     checkArgsNum(args, 2);
-    //     repo.find(args[1]);
+    } else if (firstArg == "log") {
+        checkCWD();
+        checkArgsNum(args, 1);
+        repo.log();
+    } else if (firstArg == "global-log") {
+        checkCWD();
+        checkArgsNum(args, 1);
+        repo.globalLog();
+    } else if (firstArg == "find") {
+        checkCWD();
+        checkArgsNum(args, 2);
+        repo.find(args[1]);
     } else if (firstArg == "status") {
         checkCWD();
         checkArgsNum(args, 1);
         repo.status();
-    // } else if (firstArg == "checkout") {
-    //     checkCWD();
-    //     if (args.size() == 2) {
-    //         repo.checkoutBranch(args[1]);
-    //     } else if (args.size() == 3) {
-    //         if (args[1] != "--") {
-    //             Utils::exitWithMessage("Incorrect operands.");
-    //         }
-    //         repo.checkoutFile(args[2]);
-    //     } else if (args.size() == 4) {
-    //         if (args[2] != "--") {
-    //             Utils::exitWithMessage("Incorrect operands.");
-    //         }
-    //         repo.checkoutFileInCommit(args[1], args[3]);
-    //     } else {
-    //         Utils::exitWithMessage("Incorrect operands.");
-    //     }
+    } else if (firstArg == "checkout") {
+        checkCWD();
+        if (args.size() == 2) {
+            repo.checkoutBranch(args[1]);
+        } else if (args.size() == 3) {
+            if (args[1] != "--") {
+                Utils::exitWithMessage("Incorrect operands.");
+            }
+            repo.checkoutFile(args[2]);
+        } else if (args.size() == 4) {
+            if (args[2] != "--") {
+                Utils::exitWithMessage("Incorrect operands.");
+            }
+            repo.checkoutFileInCommit(args[1], args[3]);
+        } else {
+            Utils::exitWithMessage("Incorrect operands.");
+        }
     // } else if (firstArg == "branch") {
     //     checkCWD();
     //     checkArgsNum(args, 2);
